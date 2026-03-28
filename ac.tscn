@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://cnb715qm3l3jm"]
+
+[ext_resource type="PackedScene" uid="uid://bt8uvdcqwdtcb" path="res://models/air_conditioner/scene.gltf" id="1_cykhh"]
+
+[node name="ac" unique_id=854655469 instance=ExtResource("1_cykhh")]

@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://bole5xh0ibxgx"]
+
+[ext_resource type="PackedScene" uid="uid://dwmtm2ks6fsfa" path="res://models/children_game/scene.gltf" id="1_owwma"]
+
+[node name="playhouse" unique_id=884079809 instance=ExtResource("1_owwma")]

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Simple Light Switch
+* source:	https://sketchfab.com/3d-models/simple-light-switch-32d02fa06d474f4db5a433aa134be612
+* author:	BillieBones (https://sketchfab.com/BillieBones)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Simple Light Switch" (https://sketchfab.com/3d-models/simple-light-switch-32d02fa06d474f4db5a433aa134be612) by BillieBones (https://sketchfab.com/BillieBones) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

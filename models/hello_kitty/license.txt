@@ -1,0 +1,11 @@
+Model Information:
+* title:	Hello Kitty
+* source:	https://sketchfab.com/3d-models/hello-kitty-29c52c62c5c9485c8512d4e4d969f689
+* author:	Jakobchenerey99 (https://sketchfab.com/Jakobchenerey99)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Hello Kitty" (https://sketchfab.com/3d-models/hello-kitty-29c52c62c5c9485c8512d4e4d969f689) by Jakobchenerey99 (https://sketchfab.com/Jakobchenerey99) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

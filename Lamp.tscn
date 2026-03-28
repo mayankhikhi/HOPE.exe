@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://6wuacssk0al8"]
+
+[ext_resource type="Script" uid="uid://cay642dlt44cx" path="res://lamp.gd" id="1_yljkn"]
+
+[node name="Node3D" type="Node3D" unique_id=2117304338]
+script = ExtResource("1_yljkn")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=660527826]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=326705132]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=835394464]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1057621345]

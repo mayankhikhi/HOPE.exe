@@ -1,0 +1,11 @@
+Model Information:
+* title:	Keroppi 3D Model
+* source:	https://sketchfab.com/3d-models/keroppi-3d-model-348e2eff624644e3940a0f092bdfae96
+* author:	Jatomarlo (https://sketchfab.com/j58138575)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Keroppi 3D Model" (https://sketchfab.com/3d-models/keroppi-3d-model-348e2eff624644e3940a0f092bdfae96) by Jatomarlo (https://sketchfab.com/j58138575) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

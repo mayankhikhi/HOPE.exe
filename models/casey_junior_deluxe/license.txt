@@ -1,0 +1,11 @@
+Model Information:
+* title:	Casey Junior Deluxe
+* source:	https://sketchfab.com/3d-models/casey-junior-deluxe-fd072e255d30473ba0f0dc71b78a13fc
+* author:	321_Blender (https://sketchfab.com/321_Blender)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Casey Junior Deluxe" (https://sketchfab.com/3d-models/casey-junior-deluxe-fd072e255d30473ba0f0dc71b78a13fc) by 321_Blender (https://sketchfab.com/321_Blender) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

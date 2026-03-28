@@ -1,0 +1,11 @@
+Model Information:
+* title:	The Japanese School Corridor
+* source:	https://sketchfab.com/3d-models/the-japanese-school-corridor-f7775fea6fc34f518424ef9cad55c926
+* author:	volvor (https://sketchfab.com/volvor)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "The Japanese School Corridor" (https://sketchfab.com/3d-models/the-japanese-school-corridor-f7775fea6fc34f518424ef9cad55c926) by volvor (https://sketchfab.com/volvor) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

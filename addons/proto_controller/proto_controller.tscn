@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://bs72ogkvdd7d6"]
+
+[ext_resource type="Script" uid="uid://c0l1ofk5whiiv" path="res://addons/proto_controller/proto_controller.gd" id="1_ucva2"]
+[ext_resource type="AudioStream" uid="uid://cscqw82a6aed1" path="res://audio/footsteps.mp3" id="2_wr06p"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iof21"]
+albedo_color = Color(0.91806, 0.575202, 0.222449, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ucva2"]
+radius = 0.2
+height = 1.2
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_iof21"]
+radius = 0.2
+height = 1.2259766
+
+[node name="ProtoController" type="CharacterBody3D" unique_id=1421458674]
+script = ExtResource("1_ucva2")
+can_sprint = true
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1211218910]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+material_override = SubResource("StandardMaterial3D_iof21")
+cast_shadow = 0
+mesh = SubResource("CapsuleMesh_ucva2")
+
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=795851875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00022524595, 0.88983756, 0)
+shape = SubResource("CapsuleShape3D_iof21")
+
+[node name="Head" type="Node3D" parent="." unique_id=154797274]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2020497, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head" unique_id=1586681531]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18261981, 0)
+
+[node name="RayCast3D" type="RayCast3D" parent="Head" unique_id=1440702578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.6, 0)
+target_position = Vector3(0, 0, -3)
+collision_mask = 2
+
+[node name="FootstepSound" type="AudioStreamPlayer3D" parent="." unique_id=324561500]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35302737, 0)
+stream = ExtResource("2_wr06p")
+volume_db = -8.0
+unit_size = 8.0
+max_distance = 20.0
+
+[node name="AudioListener3D" type="AudioListener3D" parent="." unique_id=987830255]
+current = true

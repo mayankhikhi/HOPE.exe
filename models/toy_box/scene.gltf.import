@@ -1,0 +1,72 @@
+[remap]
+
+importer="scene"
+importer_version=1
+type="PackedScene"
+uid="uid://bhq6q1o8vohw"
+path="res://.godot/imported/scene.gltf-593f65430ae53158b7c688981f9b2ddd.scn"
+
+[deps]
+
+source_file="res://models/toy_box/scene.gltf"
+dest_files=["res://.godot/imported/scene.gltf-593f65430ae53158b7c688981f9b2ddd.scn"]
+
+[params]
+
+nodes/root_type=""
+nodes/root_name=""
+nodes/root_script=null
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=true
+meshes/generate_lods=true
+meshes/create_shadow_meshes=true
+meshes/light_baking=1
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=false
+skins/use_named_skins=true
+animation/import=true
+animation/fps=30
+animation/trimming=false
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={
+"nodes": {
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/Floor/Floor_Mat_Room_0": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/Lightbeam2/Lightbeam2_Mat_Light_0": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/Wall1": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/Wall2": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/WallTrim1/WallTrim1_Mat_Room_0": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/WallTrim2/WallTrim2_Mat_Room_0": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/WindowFrame/WindowFrame_Mat_Box_0": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/WindowLight/WindowLight_Mat_Light_0": {
+"import/skip_import": true
+},
+"PATH:Sketchfab_model/b8dce7101fbf4c499da514b9795f651e_fbx/RootNode/Toy_Box_Sceme/Environment/WindowSil/WindowSil_Mat_Box_0": {
+"import/skip_import": true
+}
+}
+}
+gltf/naming_version=2
+gltf/embedded_image_handling=1

@@ -46,6 +46,7 @@ var mouse_captured : bool = false
 var look_rotation : Vector2
 var move_speed : float = 0.0
 var freeflying : bool = false
+var current_interactable = null
 
 ## IMPORTANT REFERENCES
 @onready var head: Node3D = $Head
@@ -132,8 +133,10 @@ func _physics_process(delta: float) -> void:
 			var dist = global_position.distance_to(d.global_position)
 			if dist <= interact_radius:
 				print("SCENE CHANGE")
-				get_tree().change_scene_to_file("res://scenees/LevelTest2.tscn")
-
+				get_tree().change_scene_to_file("res://scenees/LevelTest2.scn")
+	
+	if current_interactable and Input.is_action_just_pressed("interact"):
+		current_interactable.interact()
 ## Rotate us to look around.
 ## Base of controller rotates around y (left/right). Head rotates around x (up/down).
 ## Modifies look_rotation based on rot_input, then resets basis and rotates by look_rotation.
@@ -191,3 +194,7 @@ func check_input_mappings():
 	if can_freefly and not InputMap.has_action(input_freefly):
 		push_error("Freefly disabled. No InputAction found for input_freefly: " + input_freefly)
 		can_freefly = false
+
+func set_interactable(obj):
+	current_interactable = obj
+	$"../CanvasLayer/InteractUI".visible = obj != null

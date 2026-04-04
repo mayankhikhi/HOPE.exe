@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="HOPE.EXE"
-run/main_scene="uid://b687jc3cwqa3p"
+run/main_scene="uid://qky2lipxy5xu"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 

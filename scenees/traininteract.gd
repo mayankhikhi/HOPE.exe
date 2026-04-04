@@ -22,4 +22,3 @@ func destroy_train():
 	var train = get_parent()
 	train.rotation_degrees.z = 45
 	await get_tree().create_timer(0.5).timeout
-	train.queue_free()

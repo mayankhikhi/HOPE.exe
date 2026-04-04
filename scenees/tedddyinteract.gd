@@ -2,7 +2,6 @@ extends Area3D
 
 var player_inside = false
 var is_done = false
-
 func _ready():
 	body_entered.connect(_enter)
 	body_exited.connect(_exit)

@@ -1,7 +1,7 @@
 extends Node
 
 var total_interactables = 0  # Total count from group
-var interacted_objects = {}  # Track which ones have been interacted
+var unique_interactions = {}  # Track UNIQUE interactions (ANY name)
 var triggered = false
 var horror_in_progress = false  # Prevent concurrent horror sequences
 var last_scene_name = ""
@@ -29,22 +29,22 @@ func initialize_level():
 	# Reset horror state for new level
 	triggered = false
 	horror_in_progress = false
-	interacted_objects.clear()
+	unique_interactions.clear()
 	flicker_lights_saved.clear()
 	
 	# Count all interactables in the "interactable" group
 	var interactables = get_tree().get_nodes_in_group("interactable")
 	total_interactables = interactables.size()
-	
-	print("Found %d interactables in 'interactable' group" % total_interactables)
-	print("Ready - interact with all objects to trigger horror")
-	print("DEV: Press F to trigger horror")
+	print("DEBUG: Found %d total nodes in 'interactable' group" % total_interactables)
 	
 	# Find and save lamp/tubelight references BEFORE turning them off
 	find_and_save_flicker_lights()
 	
 	# Turn off lamp and tubelight at start (they will flicker during horror)
 	turn_off_initial_lights()
+	
+	print("Ready - interact with objects to trigger horror")
+	print("DEV: Press F to trigger horror")
 
 func _process(delta):
 	# Detect scene change by checking if current scene name changed
@@ -101,36 +101,24 @@ func turn_off_initial_lights():
 	print("Initial lights disabled: %d" % lights_off)
 
 func register_destroy(type):
-	# Mark this object as interacted (only count first time)
-	# Don't check group - just track whatever is passed
-	
-	if type not in interacted_objects:
-		# New object type, add it
-		interacted_objects[type] = true
-		print("✓ Interacted: %s" % type)
-	elif not interacted_objects[type]:
-		# Already seen but marked false, mark as true
-		interacted_objects[type] = true
-		print("✓ Interacted: %s" % type)
+	# Track ANY unique interaction name
+	if type not in unique_interactions:
+		unique_interactions[type] = true
+		var unique_count = unique_interactions.size()
+		print("✓ Interacted: %s (unique interaction %d)" % [type, unique_count])
+		
+		# Calculate expected interactions (half of group = actual objects, other half is interaction zones)
+		var expected_interactions = total_interactables / 2
+		
+		print("Progress: %d/%d interactions" % [unique_count, expected_interactions])
+		
+		# Check if all interactions complete
+		if unique_count >= expected_interactions and not triggered and not horror_in_progress:
+			triggered = true
+			print("!!! ALL INTERACTIONS COMPLETE - HORROR STARTING !!!")
+			start_horror()
 	else:
-		# Already interacted, ignore duplicate
 		print("Already interacted: %s (ignoring duplicate)" % type)
-		return
-	
-	# Count how many unique objects have been interacted
-	var interacted_count = 0
-	for obj_name in interacted_objects.keys():
-		if interacted_objects[obj_name]:
-			interacted_count += 1
-	
-	print("Progress: %d unique objects interacted" % interacted_count)
-	
-	# Check if all objects from the group have been interacted
-	# If we have interacted with at least as many as were in the group, start horror
-	if total_interactables > 0 and interacted_count >= total_interactables and not triggered and not horror_in_progress:
-		triggered = true
-		print("!!! ALL INTERACTABLES INTERACTED - HORROR STARTING !!!")
-		start_horror()
 
 func stop_music_box():
 	# Comprehensive search for music box/ambient music

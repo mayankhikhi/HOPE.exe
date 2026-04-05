@@ -1,12 +1,13 @@
 extends Node
 
-var total_required = 0
-var destroyed = 0
-var destroyed_objects = []  # Track which specific objects were destroyed
+var destroyed_objects = {}  # Track which objects have been destroyed
 var triggered = false
 var horror_in_progress = false  # Prevent concurrent horror sequences
 var last_scene_name = ""
 var flicker_lights_saved = []  # Store references to lights for flickering during horror
+
+# Hardcoded list of 4 interactables that must be destroyed
+var required_objects = ["drawing", "train", "teddy", "crib"]
 
 func _ready():
 	# Hide the horror label at start
@@ -30,9 +31,13 @@ func initialize_level():
 	# Reset horror state for new level
 	triggered = false
 	horror_in_progress = false
-	destroyed = 0
 	destroyed_objects.clear()
 	flicker_lights_saved.clear()
+	
+	# Initialize tracking for all 4 required objects
+	for obj in required_objects:
+		destroyed_objects[obj] = false
+	print("Tracking objects: %s" % required_objects)
 	
 	# Find and save lamp/tubelight references BEFORE turning them off
 	find_and_save_flicker_lights()
@@ -54,14 +59,6 @@ func _process(delta):
 		initialize_level()
 	
 	last_scene_name = current_scene_name
-	
-	# SIMPLE TRIGGER: If interactable group is empty and not already triggered, start horror
-	if not triggered and not horror_in_progress:
-		if get_tree().get_nodes_in_group("interactable").is_empty():
-			print("*** All interactables gone - HORROR STARTING! ***")
-			triggered = true
-			start_horror()
-			return
 	
 	# DEV KEY: Press F to trigger horror
 	if Input.is_key_pressed(KEY_F) and not triggered and not horror_in_progress:
@@ -106,9 +103,24 @@ func turn_off_initial_lights():
 	print("Initial lights disabled: %d" % lights_off)
 
 func register_destroy(type):
-	# Just log the destruction
-	destroyed += 1
-	print("Object destroyed: %s (call #%d)" % [type, destroyed])
+	# Mark this object type as destroyed
+	if type in destroyed_objects:
+		destroyed_objects[type] = true
+		print("✓ Destroyed: %s" % type)
+	else:
+		print("Destroyed: %s (not in required objects)" % type)
+	
+	# Check if all 4 required objects have been destroyed
+	var all_destroyed = true
+	for obj in required_objects:
+		if not destroyed_objects.get(obj, false):
+			all_destroyed = false
+			break
+	
+	if all_destroyed and not triggered and not horror_in_progress:
+		triggered = true
+		print("!!! ALL 4 OBJECTS DESTROYED - HORROR STARTING !!!")
+		start_horror()
 
 func stop_music_box():
 	# Comprehensive search for music box/ambient music

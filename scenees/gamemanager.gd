@@ -17,6 +17,20 @@ func _ready():
 		
 		print("✓ HorrorLabel & children: mouse passthrough enabled")
 	
+	# Connect to scene changed signal to reset horror state on level changes
+	get_tree().scene_changed.connect(_on_scene_changed)
+	
+	# Initialize the level
+	initialize_level()
+
+func _on_scene_changed(new_scene: Node):
+	# Reset horror state when scene changes
+	triggered = false
+	destroyed = 0
+	print("Scene changed - horror state reset")
+	initialize_level()
+
+func initialize_level():
 	# Turn off lamp and tubelight at start (they will flicker during horror)
 	turn_off_initial_lights()
 	

@@ -47,23 +47,33 @@ var look_rotation : Vector2
 var move_speed : float = 0.0
 var freeflying : bool = false
 var current_interactable = null
+var input_enabled : bool = true  # For phone/UI interaction lock
 
 ## IMPORTANT REFERENCES
 @onready var head: Node3D = $Head
 @onready var collider: CollisionShape3D = $Collider
-@onready var footstep = $FootstepSound
+var footstep = null
 @onready var cam = $Head/Camera3D
 
 
 func _ready() -> void:
+	# Try to get footstep sound if it exists
+	if has_node("FootstepSound"):
+		footstep = $FootstepSound
+	
+	# Auto-capture mouse on start for immersive experience
+	capture_mouse()
+	
 	check_input_mappings()
 	look_rotation.y = rotation.y
 	look_rotation.x = head.rotation.x
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Mouse capturing
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+	# Ensure mouse is captured for look around
+	if not mouse_captured and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		capture_mouse()
+	
+	# Release mouse on ESC
 	if Input.is_key_pressed(KEY_ESCAPE):
 		release_mouse()
 	
@@ -79,6 +89,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			disable_freefly()
 
 func _physics_process(delta: float) -> void:
+	# Stop all input if disabled (e.g., phone interaction)
+	if not input_enabled:
+		velocity.x = 0
+		velocity.z = 0
+		move_and_slide()
+		return
+	
 	# If freeflying, handle freefly and nothing else
 	if can_freefly and freeflying:
 		var input_dir := Input.get_vector(input_left, input_right, input_forward, input_back)
@@ -121,22 +138,23 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	var is_walking = velocity.length() > 0.2 and is_on_floor()
 	
-	if is_walking:
-		if not footstep.playing:
-			footstep.play()
-	else:
-		footstep.stop()
+	if footstep:
+		if is_walking:
+			if not footstep.playing:
+				footstep.play()
+		else:
+			footstep.stop()
 	
 	if Input.is_action_just_pressed(input_interact):
-		var doors = get_tree().get_nodes_in_group("exitdoor")
-		for d in doors:
-			var dist = global_position.distance_to(d.global_position)
-			if dist <= interact_radius:
-				print("SCENE CHANGE")
-				get_tree().change_scene_to_file("res://scenees/LevelTest2.scn")
-	
-	if current_interactable and Input.is_action_just_pressed("interact"):
-		current_interactable.interact()
+		if current_interactable:
+			current_interactable.interact()
+		else:
+			var doors = get_tree().get_nodes_in_group("exitdoor")
+			for d in doors:
+				var dist = global_position.distance_to(d.global_position)
+				if dist <= interact_radius and d.has_method("interact"):
+					d.interact()
+
 ## Rotate us to look around.
 ## Base of controller rotates around y (left/right). Head rotates around x (up/down).
 ## Modifies look_rotation based on rot_input, then resets basis and rotates by look_rotation.
@@ -158,6 +176,19 @@ func enable_freefly():
 func disable_freefly():
 	collider.disabled = false
 	freeflying = false
+
+
+func disable_input():
+	"""Lock player movement and input (for phone/UI interaction)"""
+	input_enabled = false
+	velocity = Vector3.ZERO
+	print("✓ Player input DISABLED")
+
+
+func enable_input():
+	"""Unlock player movement and input"""
+	input_enabled = true
+	print("✓ Player input ENABLED")
 
 
 func capture_mouse():
@@ -197,4 +228,27 @@ func check_input_mappings():
 
 func set_interactable(obj):
 	current_interactable = obj
-	$"../CanvasLayer/InteractUI".visible = obj != null
+
+	# Try to find UI in "ui" group first
+	var ui = get_tree().get_first_node_in_group("ui")
+	
+	# If not in group, try common UI node names as fallback
+	if not ui:
+		ui = get_tree().get_root().find_child("UI", true, false)
+	if not ui:
+		ui = get_tree().get_root().find_child("CanvasLayer", true, false)
+	if not ui:
+		ui = get_tree().get_root().find_child("InteractPrompt", true, false)
+	
+	# Control UI visibility based on whether there's an interactable
+	if ui:
+		ui.visible = obj != null
+		if obj:
+			print("E Prompt shown")
+		else:
+			print("E Prompt hidden")
+	else:
+		# Fallback: hide all CanvasLayers if no specific UI node found
+		for canvas in get_tree().get_nodes_in_group("ui"):
+			if canvas is CanvasLayer or canvas is Control:
+				canvas.visible = obj != null

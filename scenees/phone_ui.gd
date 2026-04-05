@@ -75,7 +75,6 @@ func setup_ui():
 	var notification_style = StyleBoxFlat.new()
 	notification_style.bg_color = Color(0.15, 0.15, 0.15, 0.95)
 	notification_style.border_color = Color(0.3, 0.7, 1.0, 1.0)
-	notification_style.set_border_enabled(true)
 	notification_style.set_border_width_all(2)
 	notification_panel.add_theme_stylebox_override("panel", notification_style)
 	
@@ -149,7 +148,6 @@ func setup_ui():
 		var btn_style = StyleBoxFlat.new()
 		btn_style.bg_color = Color(0.2, 0.2, 0.2, 1.0)
 		btn_style.border_color = Color(0.4, 0.4, 0.4, 1.0)
-		btn_style.set_border_enabled(true)
 		btn_style.set_border_width_all(1)
 		btn.add_theme_stylebox_override("normal", btn_style)
 		
@@ -277,7 +275,6 @@ func _on_contact_selected(contact: String):
 		else:
 			btn_style.bg_color = Color(0.2, 0.2, 0.2, 1.0)
 		btn_style.border_color = Color(0.4, 0.4, 0.4, 1.0)
-		btn_style.set_border_enabled(true)
 		btn_style.set_border_width_all(1)
 		contact_buttons[c].add_theme_stylebox_override("normal", btn_style)
 	

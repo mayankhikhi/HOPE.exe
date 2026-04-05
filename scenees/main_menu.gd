@@ -27,9 +27,9 @@ func _on_play_pressed():
 		return
 	is_transitioning = true
 	button_type = "play"
-	print("Play button pressed - loading level...")
+	print("Play button pressed - loading Level 2...")
 	await get_tree().create_timer(0.3).timeout
-	get_tree().change_scene_to_file("res://scenees/level_test_3.tscn")
+	get_tree().change_scene_to_file("res://scenees/Level2.tscn")
 
 func _on_options_pressed():
 	if is_transitioning:

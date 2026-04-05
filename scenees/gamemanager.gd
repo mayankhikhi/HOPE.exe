@@ -46,17 +46,13 @@ func initialize_level():
 	
 	# Debug: List all interactable objects
 	print("DEBUG: Interactable objects in scene:")
-	var unique_interactables = []
 	for obj in interactables:
 		print("  - ", obj.name, " (", obj.get_class(), ")")
-		# Track unique objects
-		if obj not in unique_interactables:
-			unique_interactables.append(obj)
 	
-	print("Total interactables found: %d (unique: %d)" % [total_required, unique_interactables.size()])
+	print("Total interactables found: %d" % total_required)
 	
 	if total_required > 0:
-		print("Ready for horror - %d interactable objects found" % total_required)
+		print("Ready for horror - will trigger when all %d objects destroyed or scene empty" % total_required)
 	else:
 		print("(Main menu - no interactables)")
 	
@@ -74,11 +70,11 @@ func _process(delta):
 	
 	last_scene_name = current_scene_name
 	
-	# Monitor remaining interactables and trigger if all gone
+	# PRIMARY HORROR TRIGGER: Check if all interactables have been removed from scene
 	if total_required > 0 and not triggered and not horror_in_progress:
 		var remaining_interactables = get_tree().get_nodes_in_group("interactable")
-		if remaining_interactables.size() == 0:
-			print("*** All interactables removed from scene - triggering horror ***")
+		if remaining_interactables.is_empty():
+			print("*** All interactables removed from scene - triggering horror! ***")
 			triggered = true
 			start_horror()
 			return
@@ -126,27 +122,9 @@ func turn_off_initial_lights():
 	print("Initial lights disabled: %d" % lights_off)
 
 func register_destroy(type):
+	# Just log the destruction
 	destroyed += 1
-	
-	# Track the unique object name/type to avoid counting duplicates
-	var object_key = type  # Use the type parameter to identify unique objects
-	if object_key not in destroyed_objects:
-		destroyed_objects.append(object_key)
-	
-	var unique_destroyed = destroyed_objects.size()
-	print("Destroyed: %d total calls, %d unique objects (%s)" % [destroyed, unique_destroyed, type])
-	print("  Unique destroyed: %s" % [", ".join(destroyed_objects)])
-	
-	# Check if all UNIQUE objects have been destroyed
-	if total_required > 0 and unique_destroyed >= total_required and not triggered and not horror_in_progress:
-		triggered = true
-		print("!!! ALL %d OBJECTS DESTROYED - HORROR STARTING !!!" % total_required)
-		start_horror()
-	elif total_required == 0:
-		print("WARNING: total_required is 0, cannot start horror")
-	else:
-		var remaining = total_required - unique_destroyed
-		print("Waiting... %d more unique objects to destroy" % remaining)
+	print("Object destroyed: %s (call #%d)" % [type, destroyed])
 
 func stop_music_box():
 	# Comprehensive search for music box/ambient music

@@ -4,6 +4,7 @@ var total_required = 0
 var destroyed = 0
 var triggered = false
 var last_scene_name = ""
+var flicker_lights_saved = []  # Store references to lights for flickering during horror
 
 func _ready():
 	# Hide the horror label at start
@@ -27,6 +28,10 @@ func initialize_level():
 	# Reset horror state for new level
 	triggered = false
 	destroyed = 0
+	flicker_lights_saved.clear()
+	
+	# Find and save lamp/tubelight references BEFORE turning them off
+	find_and_save_flicker_lights()
 	
 	# Turn off lamp and tubelight at start (they will flicker during horror)
 	turn_off_initial_lights()
@@ -45,10 +50,11 @@ func initialize_level():
 
 func _process(delta):
 	# Detect scene change by checking if current scene name changed
+	# Ignore GameManager (autoload), only trigger on actual game level changes
 	var current_scene = get_tree().root.get_child(get_tree().root.get_child_count() - 1)
 	var current_scene_name = current_scene.name
 	
-	if last_scene_name != "" and last_scene_name != current_scene_name:
+	if last_scene_name != "" and last_scene_name != current_scene_name and current_scene_name != "GameManager":
 		print("*** SCENE CHANGED: %s -> %s ***" % [last_scene_name, current_scene_name])
 		initialize_level()
 	
@@ -60,26 +66,39 @@ func _process(delta):
 		print("DEV: Horror triggered manually by F key")
 		start_horror()
 
-func turn_off_initial_lights():
-	# Turn off lamp and tubelight lights at the start (they will flicker when horror begins)
-	print("DEBUG: Turning off initial lamp and tubelight lights...")
-	var lights_off = 0
+func find_and_save_flicker_lights():
+	# Find lamp and tubelight lights and save their references for later flickering
+	print("DEBUG: Finding flicker lights...")
+	flicker_lights_saved.clear()
 	
 	# Search for tablelamplight and tubelight in all lights
 	var all_lights = get_tree().get_nodes_in_group("lights")
 	for light in all_lights:
 		if light and "light_energy" in light and light.name in ["tablelamplight", "tubelight"]:
-			light.light_energy = 0
-			lights_off += 1
-			print("  ✓ ", light.name, " turned OFF")
+			flicker_lights_saved.append(light)
+			print("  ✓ Saved ", light.name, " for flickering")
 	
 	# Also search in entire scene for any stray lamp/tubelight lights
 	for node in get_tree().root.find_children("*", "Light3D", true, false):
 		if node and "light_energy" in node and node.name in ["tablelamplight", "tubelight"]:
-			if node.light_energy > 0:
-				node.light_energy = 0
-				lights_off += 1
-				print("  ✓ Found stray ", node.name, " and turned OFF")
+			# Check if not already in list
+			if node not in flicker_lights_saved:
+				flicker_lights_saved.append(node)
+				print("  ✓ Saved stray ", node.name, " for flickering")
+	
+	print("Total flicker lights saved: %d" % flicker_lights_saved.size())
+
+func turn_off_initial_lights():
+	# Turn off lamp and tubelight lights at the start (they will flicker when horror begins)
+	print("DEBUG: Turning off initial lamp and tubelight lights...")
+	var lights_off = 0
+	
+	# Use the saved references to turn them off
+	for light in flicker_lights_saved:
+		if is_instance_valid(light):
+			light.light_energy = 0
+			lights_off += 1
+			print("  ✓ ", light.name, " turned OFF")
 	
 	print("Initial lights disabled: %d" % lights_off)
 
@@ -122,32 +141,28 @@ func start_horror():
 	# lights OFF - turn off ALL lights in the scene (not just group)
 	print("DEBUG: Turning off lights...")
 	var lights_found = 0
-	# Array will be created in the loop below
 	
-	# First, turn off lights in "lights" group
+	# First, turn off lights in "lights" group (but not the flickering lamp/tubelight)
 	var all_lights = get_tree().get_nodes_in_group("lights")
-	var flicker_lights = []  # Array to store multiple lights for flickering
 	print("  Total lights in 'lights' group: ", all_lights.size())
 	for light in all_lights:
 		print("  Found grouped light: ", light.name, " type: ", light.get_class())
 		if light and "light_energy" in light:
-			# Save lights for flickering instead of turning off
+			# Skip flickering lights - they're already saved separately
 			if light.name in ["tablelamplight", "tubelight"]:
-				flicker_lights.append(light)
-				print("    ✓ ", light.name, " saved for flickering")
+				print("    ✓ ", light.name, " reserved for flickering")
 			else:
 				light.light_energy = 0
 				lights_found += 1
 				print("    ✓ ", light.name, " turned OFF")
 	
-	# Second, find ALL DirectionalLight3D, OmniLight3D, SpotLight3D in the entire scene
+	# Second, find ALL DirectionalLight3D, OmniLight3D, SpotLight3D in the entire scene (but not flickering lights)
 	for node in get_tree().root.find_children("*", "Light3D", true, false):
 		if node and "light_energy" in node:
 			if node.light_energy > 0:
-				# ADD LIGHT NAMES HERE for flickering
-				if node.name in ["tablelamplight", "tubelight"]:  # PLACEHOLDER: Add light names here
-					flicker_lights.append(node)
-					print("  Found stray ", node.name, " for flickering")
+				# Skip flickering lights - they're already saved separately
+				if node.name in ["tablelamplight", "tubelight"]:
+					print("  Found stray ", node.name, " reserved for flickering")
 				else:
 					print("  Found stray light: ", node.name, " at energy ", node.light_energy)
 					node.light_energy = 0
@@ -156,12 +171,12 @@ func start_horror():
 	
 	print("Turned off %d total lights" % lights_found)
 	
-	# Start flickering all saved lights
-	if flicker_lights.size() > 0:
-		start_flicker(flicker_lights)
-		print("Flickering started for %d lights" % flicker_lights.size())
+	# Start flickering the saved lamp/tubelight lights
+	if flicker_lights_saved.size() > 0:
+		start_flicker(flicker_lights_saved)
+		print("Flickering started for %d lights" % flicker_lights_saved.size())
 	else:
-		print("WARNING: No lights found for flickering")
+		print("WARNING: No flicker lights saved")
 
 	await get_tree().create_timer(1.0).timeout
 

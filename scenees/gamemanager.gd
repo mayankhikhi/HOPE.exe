@@ -2,6 +2,7 @@ extends Node
 
 var total_required = 0
 var destroyed = 0
+var destroyed_objects = []  # Track which specific objects were destroyed
 var triggered = false
 var horror_in_progress = false  # Prevent concurrent horror sequences
 var last_scene_name = ""
@@ -30,6 +31,7 @@ func initialize_level():
 	triggered = false
 	horror_in_progress = false
 	destroyed = 0
+	destroyed_objects.clear()
 	flicker_lights_saved.clear()
 	
 	# Find and save lamp/tubelight references BEFORE turning them off
@@ -41,7 +43,17 @@ func initialize_level():
 	# Count all interactable objects
 	var interactables = get_tree().get_nodes_in_group("interactable")
 	total_required = interactables.size()
-	print("GameManager initialized - total_required = %d" % total_required)
+	
+	# Debug: List all interactable objects
+	print("DEBUG: Interactable objects in scene:")
+	var unique_interactables = []
+	for obj in interactables:
+		print("  - ", obj.name, " (", obj.get_class(), ")")
+		# Track unique objects
+		if obj not in unique_interactables:
+			unique_interactables.append(obj)
+	
+	print("Total interactables found: %d (unique: %d)" % [total_required, unique_interactables.size()])
 	
 	if total_required > 0:
 		print("Ready for horror - %d interactable objects found" % total_required)
@@ -61,6 +73,15 @@ func _process(delta):
 		initialize_level()
 	
 	last_scene_name = current_scene_name
+	
+	# Monitor remaining interactables and trigger if all gone
+	if total_required > 0 and not triggered and not horror_in_progress:
+		var remaining_interactables = get_tree().get_nodes_in_group("interactable")
+		if remaining_interactables.size() == 0:
+			print("*** All interactables removed from scene - triggering horror ***")
+			triggered = true
+			start_horror()
+			return
 	
 	# DEV KEY: Press F to trigger horror
 	if Input.is_key_pressed(KEY_F) and not triggered and not horror_in_progress:
@@ -106,17 +127,26 @@ func turn_off_initial_lights():
 
 func register_destroy(type):
 	destroyed += 1
-	print("Destroyed: %d/%d (%s) [triggered=%s, total_required=%d]" % [destroyed, total_required, type, triggered, total_required])
-
-	# ONLY trigger if destroyed ALL objects AND counter is valid AND not already running
-	if total_required > 0 and destroyed >= total_required and not triggered and not horror_in_progress:
+	
+	# Track the unique object name/type to avoid counting duplicates
+	var object_key = type  # Use the type parameter to identify unique objects
+	if object_key not in destroyed_objects:
+		destroyed_objects.append(object_key)
+	
+	var unique_destroyed = destroyed_objects.size()
+	print("Destroyed: %d total calls, %d unique objects (%s)" % [destroyed, unique_destroyed, type])
+	print("  Unique destroyed: %s" % [", ".join(destroyed_objects)])
+	
+	# Check if all UNIQUE objects have been destroyed
+	if total_required > 0 and unique_destroyed >= total_required and not triggered and not horror_in_progress:
 		triggered = true
 		print("!!! ALL %d OBJECTS DESTROYED - HORROR STARTING !!!" % total_required)
 		start_horror()
 	elif total_required == 0:
 		print("WARNING: total_required is 0, cannot start horror")
-	elif destroyed < total_required:
-		print("Waiting... %d more objects to destroy" % (total_required - destroyed))
+	else:
+		var remaining = total_required - unique_destroyed
+		print("Waiting... %d more unique objects to destroy" % remaining)
 
 func stop_music_box():
 	# Comprehensive search for music box/ambient music
@@ -135,7 +165,7 @@ func stop_music_box():
 				return
 	
 	# Try all groups: music, audio, ambient, bgm
-	for group_name in ["music", "audio", "ambient", "bgm"]:
+	for group_name in ["music", "musicbox", "ambient", "bgm"]:
 		var audio = get_tree().get_first_node_in_group(group_name)
 		if audio and (audio is AudioStreamPlayer or audio is AudioStreamPlayer3D):
 			if audio.playing:
@@ -272,7 +302,7 @@ func start_horror():
 					break
 		
 		if chase and chase is AudioStreamPlayer3D:
-			chase.volume_db = 18  # Loud chase effect
+			chase.volume_db = 25  # Loud chase effect
 			chase.play()
 			print("✓ Chase sound started - following player")
 		else:

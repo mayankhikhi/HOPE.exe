@@ -40,22 +40,7 @@ func initialize_level():
 	# Turn off lamp and tubelight at start (they will flicker during horror)
 	turn_off_initial_lights()
 	
-	# Count all interactable objects
-	var interactables = get_tree().get_nodes_in_group("interactable")
-	total_required = interactables.size()
-	
-	# Debug: List all interactable objects
-	print("DEBUG: Interactable objects in scene:")
-	for obj in interactables:
-		print("  - ", obj.name, " (", obj.get_class(), ")")
-	
-	print("Total interactables found: %d" % total_required)
-	
-	if total_required > 0:
-		print("Ready for horror - will trigger when all %d objects destroyed or scene empty" % total_required)
-	else:
-		print("(Main menu - no interactables)")
-	
+	print("GameManager initialized - ready for horror when all interactables destroyed")
 	print("DEV: Press F to trigger horror")
 
 func _process(delta):
@@ -70,11 +55,10 @@ func _process(delta):
 	
 	last_scene_name = current_scene_name
 	
-	# PRIMARY HORROR TRIGGER: Check if all interactables have been removed from scene
-	if total_required > 0 and not triggered and not horror_in_progress:
-		var remaining_interactables = get_tree().get_nodes_in_group("interactable")
-		if remaining_interactables.is_empty():
-			print("*** All interactables removed from scene - triggering horror! ***")
+	# SIMPLE TRIGGER: If interactable group is empty and not already triggered, start horror
+	if not triggered and not horror_in_progress:
+		if get_tree().get_nodes_in_group("interactable").is_empty():
+			print("*** All interactables gone - HORROR STARTING! ***")
 			triggered = true
 			start_horror()
 			return

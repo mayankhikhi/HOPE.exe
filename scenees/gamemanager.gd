@@ -3,6 +3,7 @@ extends Node
 var total_required = 0
 var destroyed = 0
 var triggered = false
+var last_scene_name = ""
 
 func _ready():
 	# Hide the horror label at start
@@ -17,31 +18,43 @@ func _ready():
 		
 		print("✓ HorrorLabel & children: mouse passthrough enabled")
 	
-	# Connect to scene changed signal to reset horror state on level changes
-	get_tree().scene_changed.connect(_on_scene_changed)
-	
 	# Initialize the level
 	initialize_level()
 
-func _on_scene_changed(new_scene: Node):
-	# Reset horror state when scene changes
+func initialize_level():
+	print("=== GameManager: Initializing level ===")
+	
+	# Reset horror state for new level
 	triggered = false
 	destroyed = 0
-	print("Scene changed - horror state reset")
-	initialize_level()
-
-func initialize_level():
+	
 	# Turn off lamp and tubelight at start (they will flicker during horror)
 	turn_off_initial_lights()
 	
 	# Count all interactable objects
 	var interactables = get_tree().get_nodes_in_group("interactable")
 	total_required = interactables.size()
-	print("GameManager: Found %d interactable objects to destroy" % total_required)
+	print("GameManager initialized - total_required = %d" % total_required)
+	
+	if total_required > 0:
+		print("Ready for horror - %d interactable objects found" % total_required)
+	else:
+		print("(Main menu - no interactables)")
+	
 	print("DEV: Press F to trigger horror")
 
 func _process(delta):
-	# DEV KEY: Press F only while also pressing nothing else to trigger horror
+	# Detect scene change by checking if current scene name changed
+	var current_scene = get_tree().root.get_child(get_tree().root.get_child_count() - 1)
+	var current_scene_name = current_scene.name
+	
+	if last_scene_name != "" and last_scene_name != current_scene_name:
+		print("*** SCENE CHANGED: %s -> %s ***" % [last_scene_name, current_scene_name])
+		initialize_level()
+	
+	last_scene_name = current_scene_name
+	
+	# DEV KEY: Press F to trigger horror
 	if Input.is_key_pressed(KEY_F) and not triggered:
 		triggered = true
 		print("DEV: Horror triggered manually by F key")
@@ -72,13 +85,17 @@ func turn_off_initial_lights():
 
 func register_destroy(type):
 	destroyed += 1
-	print("Destroyed: %d/%d (%s)" % [destroyed, total_required, type])
+	print("Destroyed: %d/%d (%s) [triggered=%s, total_required=%d]" % [destroyed, total_required, type, triggered, total_required])
 
 	# ONLY trigger if destroyed ALL objects AND counter is valid
 	if total_required > 0 and destroyed >= total_required and not triggered:
 		triggered = true
 		print("!!! ALL %d OBJECTS DESTROYED - HORROR STARTING !!!" % total_required)
 		start_horror()
+	elif total_required == 0:
+		print("WARNING: total_required is 0, cannot start horror")
+	elif destroyed < total_required:
+		print("Waiting... %d more objects to destroy" % (total_required - destroyed))
 
 func start_horror():
 	print("HORROR START")

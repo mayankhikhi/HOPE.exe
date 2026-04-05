@@ -1,45 +1,27 @@
 extends Area3D
 
-# Void portal interaction - transitions to level_test_3.scn
-
-@export var transition_scene = "res://scenees/level_test_3.tscn"
-var can_interact = true
-var e_prompt_visible = false
+# When player interacts with void, transition to next level
+var can_interact = false
 
 func _ready():
-	print("✓ Void portal ready")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	print("=== Void Interaction: Ready ===")
+	add_to_group("void")
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 
-func _on_area_entered(area):
-	if area.is_in_group("players"):
-		show_e_prompt()
+func _on_body_entered(body):
+	# Check if it's the player
+	if body.is_in_group("players") or "ProtoController" in body.name:
+		print("DEBUG: Player entered void area - can interact (press E)")
 		can_interact = true
 
-func _on_area_exited(area):
-	if area.is_in_group("players"):
-		hide_e_prompt()
+func _on_body_exited(body):
+	if body.is_in_group("players") or "ProtoController" in body.name:
+		print("DEBUG: Player left void area")
 		can_interact = false
 
-func show_e_prompt():
-	# Show E prompt UI (similar to other interactables)
-	e_prompt_visible = true
-	var prompt = get_tree().root.find_child("EPrompt", true, false)
-	if prompt:
-		prompt.visible = true
-		print("E Prompt shown (void)")
-
-func hide_e_prompt():
-	e_prompt_visible = false
-	var prompt = get_tree().root.find_child("EPrompt", true, false)
-	if prompt:
-		prompt.visible = false
-
-func _process(delta):
-	if Input.is_key_pressed(KEY_E) and can_interact and e_prompt_visible:
-		interact()
-
-func interact():
-	print("✓ Void entered - transitioning to level_test_3...")
-	can_interact = false
-	get_tree().change_scene_to_file(transition_scene)
+func _input(event):
+	if event is InputEventKey and event.pressed and event.keycode == KEY_E:
+		if can_interact:
+			print("!!! VOID INTERACTION: Transitioning to level_test_3.tscn ===")
+			get_tree().change_scene_to_file("res://scenees/level_test_3.tscn")

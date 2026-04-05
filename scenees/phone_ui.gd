@@ -1,163 +1,185 @@
 extends CanvasLayer
 
-# Phone notification and chat UI system
-
+# UI References
+var notification_panel: PanelContainer
 var notification_label: Label
-var chat_panel: Panel
-var chat_messages_display: Label
-var input_field: LineEdit
-var send_button: Button
-var chat_open = false
-var current_chat = ""  # "girlfriend", "dad", "mom"
+var chat_panel: PanelContainer
+var chat_display: TextEdit
+var chat_input: LineEdit
+var contact_buttons: Dictionary = {}
 
-# Predefined messages the player will send
-var player_messages = {
+# State tracking
+var is_phone_open = false
+var current_contact = ""
+var chat_history = {
+	"girlfriend": [],
+	"dad": [],
+	"mom": []
+}
+var messages_sent = {
+	"girlfriend": false,
+	"dad": false,
+	"mom": false
+}
+
+# Messages to send
+var message_queue = {
 	"girlfriend": "FUCK YOU BITCH!",
 	"dad": "I hope you die. You can never become a good father",
 	"mom": "I hate you"
 }
 
-var sent_messages = {}  # Track which chats have received messages
-
 func _ready():
-	# Create notification label (bottom right)
+	print("=== Phone UI: Initializing ===")
+	setup_ui()
+	show_initial_notification()
+
+func setup_ui():
+	print("DEBUG: Setting up phone UI...")
+	
+	# Create notification panel (bottom right)
+	notification_panel = PanelContainer.new()
+	notification_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	notification_panel.offset_left = -320
+	notification_panel.offset_top = -100
+	notification_panel.size = Vector2(300, 80)
+	add_child(notification_panel)
+	
+	var notification_bg = StyleBox.new()
+	notification_panel.add_theme_stylebox_override("panel", notification_bg)
+	
+	var notif_vbox = VBoxContainer.new()
+	notification_panel.add_child(notif_vbox)
+	
 	notification_label = Label.new()
-	notification_label.text = ""
-	notification_label.add_theme_font_size_override("font_size", 20)
-	notification_label.custom_minimum_size = Vector2(300, 60)
-	notification_label.modulate.a = 0  # Hidden at start
-	add_child(notification_label)
+	notification_label.text = "👧 Girlfriend: i love you <3"
+	notification_label.custom_minimum_size = Vector2(280, 60)
+	notif_vbox.add_child(notification_label)
 	
-	# Position: bottom right
-	var viewport_size = get_viewport_rect().size
-	notification_label.anchor_left = 1.0
-	notification_label.anchor_top = 1.0
-	notification_label.anchor_right = 1.0
-	notification_label.anchor_bottom = 1.0
-	notification_label.offset_left = -320
-	notification_label.offset_top = -80
+	print("✓ Notification panel created (bottom right)")
 	
-	print("✓ Phone UI initialized")
-
-func show_notification(sender: String, message: String):
-	# Show notification on bottom right
-	notification_label.text = "[%s]\n%s" % [sender, message]
-	notification_label.modulate = Color.WHITE
-	print("📱 Notification from %s: %s" % [sender, message])
-	
-	# Auto-hide after 5 seconds
-	await get_tree().create_timer(5.0).timeout
-	notification_label.modulate.a = 0
-
-func open_chat(contact_name: String):
-	if chat_open and current_chat == contact_name:
-		return  # Already open
-	
-	current_chat = contact_name
-	chat_open = true
-	print("📱 Opening chat with: %s" % contact_name)
-	
-	# Create or show chat interface
-	if not chat_panel:
-		_create_chat_interface()
-	
-	chat_panel.modulate = Color.WHITE
-	_update_chat_display()
-
-func close_chat():
-	if chat_panel:
-		chat_panel.modulate.a = 0
-	chat_open = false
-	current_chat = ""
-	print("📱 Chat closed")
-
-func _create_chat_interface():
-	# Main chat panel
-	chat_panel = Panel.new()
-	chat_panel.modulate.a = 0
-	chat_panel.custom_minimum_size = Vector2(400, 600)
+	# Create chat panel (center) - initially hidden
+	chat_panel = PanelContainer.new()
+	chat_panel.set_anchors_preset(Control.PRESET_CENTER)
+	chat_panel.size = Vector2(600, 400)
+	chat_panel.visible = false
 	add_child(chat_panel)
 	
-	# Position: center-right
-	chat_panel.anchor_left = 0.5
-	chat_panel.anchor_top = 0.5
-	chat_panel.anchor_right = 0.5
-	chat_panel.anchor_bottom = 0.5
-	chat_panel.offset_left = 100
-	chat_panel.offset_top = -300
+	var chat_vbox = VBoxContainer.new()
+	chat_panel.add_child(chat_vbox)
 	
-	# Chat messages display
-	chat_messages_display = Label.new()
-	chat_messages_display.text = ""
-	chat_messages_display.add_theme_font_size_override("font_size", 16)
-	chat_messages_display.autowrap_mode = TextServer.AUTOWRAP_WORD
-	chat_messages_display.custom_minimum_size = Vector2(380, 450)
-	chat_panel.add_child(chat_messages_display)
+	# Contact buttons
+	var buttons_hbox = HBoxContainer.new()
+	chat_vbox.add_child(buttons_hbox)
 	
-	# Input field
-	input_field = LineEdit.new()
-	input_field.placeholder_text = "Type message..."
-	input_field.custom_minimum_size = Vector2(380, 40)
-	chat_panel.add_child(input_field)
+	for contact in ["girlfriend", "dad", "mom"]:
+		var btn = Button.new()
+		btn.text = contact.capitalize()
+		btn.pressed.connect(_on_contact_selected.bindv([contact]))
+		buttons_hbox.add_child(btn)
+		contact_buttons[contact] = btn
+	
+	# Chat display
+	chat_display = TextEdit.new()
+	chat_display.custom_minimum_size = Vector2(560, 250)
+	chat_display.editable = false
+	chat_vbox.add_child(chat_display)
+	
+	# Chat input
+	chat_input = LineEdit.new()
+	chat_input.placeholder_text = "Type message..."
+	chat_input.custom_minimum_size = Vector2(560, 40)
+	chat_vbox.add_child(chat_input)
 	
 	# Send button
-	send_button = Button.new()
-	send_button.text = "SEND"
-	send_button.custom_minimum_size = Vector2(380, 40)
-	send_button.pressed.connect(_on_send_pressed)
-	chat_panel.add_child(send_button)
+	var send_btn = Button.new()
+	send_btn.text = "Send"
+	send_btn.pressed.connect(_on_send_message)
+	chat_vbox.add_child(send_btn)
 	
-	# Layout
-	var vbox = VBoxContainer.new()
-	vbox.add_child(chat_messages_display)
-	vbox.add_child(input_field)
-	vbox.add_child(send_button)
-	chat_panel.add_child(vbox)
+	print("✓ Chat panel created (center)")
 
-func _update_chat_display():
-	if not chat_messages_display:
-		return
+func show_initial_notification():
+	print("DEBUG: Showing girlfriend notification...")
+	notification_panel.show()
+	# This stays visible until phone is opened
+
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_P:
+			if not is_phone_open:
+				open_phone()
+			else:
+				close_phone()
+
+func open_phone():
+	print("DEBUG: Phone opened (P key)")
+	is_phone_open = true
+	notification_panel.hide()
+	chat_panel.show()
 	
-	var contact = current_chat
-	var display_text = "[Chat with %s]\n\n" % contact.to_upper()
+	# Default to girlfriend
+	if current_contact == "":
+		_on_contact_selected("girlfriend")
+
+func close_phone():
+	print("DEBUG: Phone closed")
+	is_phone_open = false
+	chat_panel.hide()
+	if not all_messages_sent():
+		notification_panel.show()
+
+func _on_contact_selected(contact: String):
+	print("DEBUG: Selected contact: %s" % contact)
+	current_contact = contact
 	
-	if contact in sent_messages:
-		display_text += "You: %s\n" % sent_messages[contact]
+	# Update button states
+	for c in contact_buttons:
+		contact_buttons[c].modulate = Color.GRAY
+	contact_buttons[contact].modulate = Color.WHITE
+	
+	# Display chat history
+	chat_display.clear()
+	for msg in chat_history[contact]:
+		chat_display.text += msg + "\n"
+	
+	# Auto-fill with queued message if not sent
+	if not messages_sent[contact]:
+		chat_input.text = message_queue[contact]
 	else:
-		display_text += "(No messages yet)"
-	
-	chat_messages_display.text = display_text
+		chat_input.text = ""
 
-func _on_send_pressed():
-	if current_chat == "":
+func _on_send_message():
+	if current_contact == "" or chat_input.text == "":
 		return
 	
-	# Send the predefined message
-	var message = player_messages[current_chat]
-	sent_messages[current_chat] = message
+	# Check if this is the expected message for this contact
+	var expected_msg = message_queue[current_contact]
+	var sent_msg = chat_input.text
 	
-	print("✓ Sent to %s: %s" % [current_chat, message])
-	_update_chat_display()
+	print("✓ Message sent to %s: %s" % [current_contact, sent_msg])
 	
-	# Check if all 3 messages sent
-	if sent_messages.size() >= 3:
-		print("!!! ALL MESSAGES SENT - HORROR STARTING !!!")
-		close_chat()
+	# Record in history
+	chat_history[current_contact].append("[You]: " + sent_msg)
+	chat_display.text += "[You]: " + sent_msg + "\n"
+	
+	# Mark as sent
+	messages_sent[current_contact] = true
+	chat_input.clear()
+	
+	# Check if all messages sent
+	if all_messages_sent():
+		print("!!! ALL MESSAGES SENT - TRIGGERING HORROR FOR LEVEL 2 !!!")
 		trigger_level2_horror()
 
-func trigger_level2_horror():
-	# Trigger horror sequence in level 2
-	var gamemanager = get_tree().root.find_child("GameManager", true, false)
-	if gamemanager and gamemanager.has_method("start_level2_horror"):
-		gamemanager.start_level2_horror()
-	else:
-		print("ERROR: Level2 horror method not found")
+func all_messages_sent() -> bool:
+	return messages_sent["girlfriend"] and messages_sent["dad"] and messages_sent["mom"]
 
-func _process(delta):
-	# Press P to toggle phone
-	if Input.is_action_just_pressed("ui_select"):  # Will replace with P key mapping
-		if chat_open:
-			close_chat()
-		else:
-			# Default to girlfriend chat
-			open_chat("girlfriend")
+func trigger_level2_horror():
+	# Signal to GameManager that level 2 horror should start
+	var game_manager = get_tree().get_first_node_in_group("gamemanager")
+	if game_manager and game_manager.has_method("trigger_level2_horror"):
+		close_phone()
+		game_manager.trigger_level2_horror()
+	else:
+		print("ERROR: GameManager not found or missing trigger_level2_horror method")

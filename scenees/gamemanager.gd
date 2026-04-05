@@ -1,13 +1,11 @@
 extends Node
 
-var destroyed_objects = {}  # Track which objects have been destroyed
+var total_interactables = 0  # Total count from group
+var interacted_objects = {}  # Track which ones have been interacted
 var triggered = false
 var horror_in_progress = false  # Prevent concurrent horror sequences
 var last_scene_name = ""
 var flicker_lights_saved = []  # Store references to lights for flickering during horror
-
-# Hardcoded list of 4 interactables that must be destroyed
-var required_objects = ["drawing", "train", "teddy", "crib"]
 
 func _ready():
 	# Hide the horror label at start
@@ -31,13 +29,17 @@ func initialize_level():
 	# Reset horror state for new level
 	triggered = false
 	horror_in_progress = false
-	destroyed_objects.clear()
+	interacted_objects.clear()
 	flicker_lights_saved.clear()
 	
-	# Initialize tracking for all 4 required objects
-	for obj in required_objects:
-		destroyed_objects[obj] = false
-	print("Tracking objects: %s" % required_objects)
+	# Count all interactables in the "interactable" group
+	var interactables = get_tree().get_nodes_in_group("interactable")
+	total_interactables = interactables.size()
+	
+	print("DEBUG: Found %d interactables in 'interactable' group:" % total_interactables)
+	for obj in interactables:
+		print("  - %s" % obj.name)
+		interacted_objects[obj.name] = false
 	
 	# Find and save lamp/tubelight references BEFORE turning them off
 	find_and_save_flicker_lights()
@@ -45,7 +47,7 @@ func initialize_level():
 	# Turn off lamp and tubelight at start (they will flicker during horror)
 	turn_off_initial_lights()
 	
-	print("GameManager initialized - ready for horror when all interactables destroyed")
+	print("Ready - interact with all %d objects to trigger horror" % total_interactables)
 	print("DEV: Press F to trigger horror")
 
 func _process(delta):
@@ -103,24 +105,28 @@ func turn_off_initial_lights():
 	print("Initial lights disabled: %d" % lights_off)
 
 func register_destroy(type):
-	# Mark this object type as destroyed
-	if type in destroyed_objects:
-		destroyed_objects[type] = true
-		print("✓ Destroyed: %s" % type)
+	# Mark this object as interacted (only count first time)
+	if type in interacted_objects and not interacted_objects[type]:
+		interacted_objects[type] = true
+		print("✓ Interacted: %s" % type)
+		
+		# Count how many have been interacted
+		var interacted_count = 0
+		for obj_name in interacted_objects.keys():
+			if interacted_objects[obj_name]:
+				interacted_count += 1
+		
+		print("Progress: %d/%d interactables interacted" % [interacted_count, total_interactables])
+		
+		# Check if all have been interacted
+		if interacted_count >= total_interactables and not triggered and not horror_in_progress:
+			triggered = true
+			print("!!! ALL %d INTERACTABLES INTERACTED - HORROR STARTING !!!" % total_interactables)
+			start_horror()
+	elif type in interacted_objects and interacted_objects[type]:
+		print("Already interacted: %s (ignoring duplicate)" % type)
 	else:
-		print("Destroyed: %s (not in required objects)" % type)
-	
-	# Check if all 4 required objects have been destroyed
-	var all_destroyed = true
-	for obj in required_objects:
-		if not destroyed_objects.get(obj, false):
-			all_destroyed = false
-			break
-	
-	if all_destroyed and not triggered and not horror_in_progress:
-		triggered = true
-		print("!!! ALL 4 OBJECTS DESTROYED - HORROR STARTING !!!")
-		start_horror()
+		print("Interacted: %s (not in interactable group)" % type)
 
 func stop_music_box():
 	# Comprehensive search for music box/ambient music

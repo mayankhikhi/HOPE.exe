@@ -107,8 +107,8 @@ func register_destroy(type):
 		var unique_count = unique_interactions.size()
 		print("✓ Interacted: %s (unique interaction %d)" % [type, unique_count])
 		
-		# Calculate expected interactions (half of group = actual objects, other half is interaction zones)
-		var expected_interactions = total_interactables / 2
+		# Calculate expected interactions (half of group minus 1, so 3 interactions needed)
+		var expected_interactions = (total_interactables / 2) - 1
 		
 		print("Progress: %d/%d interactions" % [unique_count, expected_interactions])
 		

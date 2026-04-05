@@ -3,6 +3,7 @@ extends Node
 var total_required = 0
 var destroyed = 0
 var triggered = false
+var horror_in_progress = false  # Prevent concurrent horror sequences
 var last_scene_name = ""
 var flicker_lights_saved = []  # Store references to lights for flickering during horror
 
@@ -27,6 +28,7 @@ func initialize_level():
 	
 	# Reset horror state for new level
 	triggered = false
+	horror_in_progress = false
 	destroyed = 0
 	flicker_lights_saved.clear()
 	
@@ -61,7 +63,7 @@ func _process(delta):
 	last_scene_name = current_scene_name
 	
 	# DEV KEY: Press F to trigger horror
-	if Input.is_key_pressed(KEY_F) and not triggered:
+	if Input.is_key_pressed(KEY_F) and not triggered and not horror_in_progress:
 		triggered = true
 		print("DEV: Horror triggered manually by F key")
 		start_horror()
@@ -106,8 +108,8 @@ func register_destroy(type):
 	destroyed += 1
 	print("Destroyed: %d/%d (%s) [triggered=%s, total_required=%d]" % [destroyed, total_required, type, triggered, total_required])
 
-	# ONLY trigger if destroyed ALL objects AND counter is valid
-	if total_required > 0 and destroyed >= total_required and not triggered:
+	# ONLY trigger if destroyed ALL objects AND counter is valid AND not already running
+	if total_required > 0 and destroyed >= total_required and not triggered and not horror_in_progress:
 		triggered = true
 		print("!!! ALL %d OBJECTS DESTROYED - HORROR STARTING !!!" % total_required)
 		start_horror()
@@ -116,7 +118,63 @@ func register_destroy(type):
 	elif destroyed < total_required:
 		print("Waiting... %d more objects to destroy" % (total_required - destroyed))
 
+func stop_music_box():
+	# Comprehensive search for music box/ambient music
+	print("DEBUG: Searching for music box audio...")
+	var stopped = false
+	
+	# Try specific names first (case variations)
+	var search_names = ["Music Box", "musicbox", "music_box", "MusicBox", "AudioStreamPlayer"]
+	for name in search_names:
+		var found = get_tree().get_root().find_child(name, true, false)
+		if found and (found is AudioStreamPlayer or found is AudioStreamPlayer3D):
+			if found.playing:
+				found.stop()
+				print("✓ Music stopped: ", name)
+				stopped = true
+				return
+	
+	# Try all groups: music, audio, ambient, bgm
+	for group_name in ["music", "audio", "ambient", "bgm"]:
+		var audio = get_tree().get_first_node_in_group(group_name)
+		if audio and (audio is AudioStreamPlayer or audio is AudioStreamPlayer3D):
+			if audio.playing:
+				audio.stop()
+				print("✓ Music stopped from group: ", group_name)
+				stopped = true
+				return
+	
+	# Last resort: find ALL audio players and stop ones that are playing (ambient/music)
+	var all_audio_3d = get_tree().root.find_children("*", "AudioStreamPlayer3D", true, false)
+	for audio in all_audio_3d:
+		if audio and audio.playing:
+			# Skip baby/chase sounds - only stop ambient/music
+			if "baby" not in audio.name.to_lower() and "chase" not in audio.name.to_lower():
+				audio.stop()
+				print("✓ Music stopped (found stray): ", audio.name)
+				stopped = true
+				return
+	
+	var all_audio_2d = get_tree().root.find_children("*", "AudioStreamPlayer", true, false)
+	for audio in all_audio_2d:
+		if audio and audio.playing:
+			# Skip baby/chase sounds - only stop ambient/music
+			if "baby" not in audio.name.to_lower() and "chase" not in audio.name.to_lower():
+				audio.stop()
+				print("✓ Music stopped (found stray 2D): ", audio.name)
+				stopped = true
+				return
+	
+	if not stopped:
+		print("WARNING: Music box/audio not found or not playing")
+
 func start_horror():
+	# Prevent concurrent horror sequences
+	if horror_in_progress:
+		print("WARNING: Horror already in progress, ignoring duplicate trigger")
+		return
+	
+	horror_in_progress = true
 	print("HORROR START")
 
 	await get_tree().create_timer(1.0).timeout
@@ -180,24 +238,8 @@ func start_horror():
 
 	await get_tree().create_timer(1.0).timeout
 
-	# STOP music box when horror starts - check all possible names
-	var music_box = get_tree().get_root().find_child("Music Box", true, false)
-	if not music_box:
-		music_box = get_tree().get_root().find_child("musicbox", true, false)
-	if not music_box:
-		music_box = get_tree().get_root().find_child("music_box", true, false)
-	
-	if music_box and music_box is AudioStreamPlayer3D:
-		music_box.stop()
-		print("✓ Music box stopped")
-	else:
-		# Try to find in audio group
-		var music_audio = get_tree().get_first_node_in_group("music")
-		if music_audio and music_audio is AudioStreamPlayer3D:
-			music_audio.stop()
-			print("✓ Music box stopped (from 'music' group)")
-		else:
-			print("WARNING: Music box not found")
+	# STOP music box when horror starts - comprehensive search
+	stop_music_box()
 
 	# baby cry - INCREASE VOLUME for psychological impact
 	var baby = get_tree().get_first_node_in_group("baby_audio")

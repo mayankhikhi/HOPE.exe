@@ -86,12 +86,53 @@ func trigger_level2_horror():
 	# Play chase sound
 	play_chase_sound()
 	
+	# Show horror messages
+	show_horror_messages_level2()
+	
 	# Game continues - player must navigate to void
+
+func show_horror_messages_level2():
+	# Flashy horror messages for level 2 (teen angst/guilt theme)
+	var horror_messages = [
+		"WHAT HAVE YOU DONE...",
+		"THEY WILL NEVER FORGIVE YOU",
+		"YOU SAID THOSE WORDS...",
+		"CAN YOU TAKE THEM BACK?",
+		"THE WORDS HAUNT YOU",
+		"YOU MONSTER...",
+		"THEY'RE SUFFERING BECAUSE OF YOU",
+		"THERE'S NO ESCAPE NOW"
+	]
+	
+	var label = get_tree().root.find_child("HorrorLabel", true, false)
+	
+	if not (label and label is Label):
+		print("ERROR: HorrorLabel not found - skipping flashy messages")
+		return
+	
+	# Show 3 messages in quick succession
+	for i in range(3):
+		var message = horror_messages[randi() % horror_messages.size()]
+		
+		# SNAP in instantly
+		label.text = message
+		label.modulate = Color.WHITE
+		print("✓ FLASH %d: %s" % [i+1, message])
+		
+		await get_tree().create_timer(0.15).timeout
+		
+		# SNAP out instantly
+		label.modulate = Color(1, 1, 1, 0)
+		
+		if i < 2:  # Gap between messages
+			await get_tree().create_timer(0.25).timeout
+	
+	print("✓ Horror messages complete")
 
 func start_flicker(lights: Array):
 	# Flicker multiple lights continuously until scene changes - EXACTLY LIKE GAMEMANAGER
-	var original_energy = 1.5  # Bright flicker
-	var dim_energy = 0.3  # Dim flicker
+	var original_energy = 3.0  # BRIGHT flicker (increased from 1.5)
+	var dim_energy = 0.8  # DIM flicker (increased from 0.3)
 	
 	if lights.is_empty():
 		print("ERROR: No lights provided for flickering")
@@ -110,6 +151,18 @@ func start_flicker(lights: Array):
 			if is_instance_valid(light):
 				light.light_energy = dim_energy
 		await get_tree().create_timer(0.15).timeout
+		
+		# Bright again
+		for light in lights:
+			if is_instance_valid(light):
+				light.light_energy = original_energy
+		await get_tree().create_timer(0.08).timeout
+		
+		# Dim again
+		for light in lights:
+			if is_instance_valid(light):
+				light.light_energy = dim_energy
+		await get_tree().create_timer(0.12).timeout
 		
 		for light in lights:
 			if is_instance_valid(light):

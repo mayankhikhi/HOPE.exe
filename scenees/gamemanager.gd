@@ -203,7 +203,8 @@ func start_horror():
 			# Create a completely dark environment
 			var dark_env = Environment.new()
 			dark_env.ambient_light_energy = 0.0  # Absolute zero ambient light
-			dark_env.background_mode = Environment.BG_BLACK  # Pure black background
+			dark_env.background_mode = Environment.BG_COLOR  # Use color mode for black
+			dark_env.background_color = Color.BLACK  # Pure black color
 			dark_env.tonemap_exposure = 0.1  # Darken the entire scene
 			dark_env.adjustment_enabled = true
 			dark_env.adjustment_brightness = 0.3  # Very dim

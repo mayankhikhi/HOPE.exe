@@ -40,56 +40,77 @@ func trigger_level2_horror():
 	horror_started = true
 	print("!!! LEVEL 2 HORROR TRIGGERED ===")
 	
-	# Turn off world environment for darkness - AGGRESSIVE DARKENING
-	print("DEBUG: Disabling environment and lights...")
-	var lights_disabled = 0
-	
-	# First, disable environment
+	await get_tree().create_timer(1.0).timeout
+
+	# Turn off world environment for darkness - EXACTLY LIKE GAMEMANAGER
+	print("DEBUG: Disabling environment...")
+	var env_disabled = 0
 	for env in get_tree().get_nodes_in_group("env"):
+		print("  Found env node: ", env.name, " type: ", env.get_class())
 		if env and env is WorldEnvironment:
+			# Create a completely dark environment
 			var dark_env = Environment.new()
-			dark_env.ambient_light_energy = 0.0
-			dark_env.background_mode = Environment.BG_COLOR
-			dark_env.background_color = Color.BLACK
-			dark_env.tonemap_exposure = 0.1
+			dark_env.ambient_light_energy = 0.0  # Absolute zero ambient light
+			dark_env.background_mode = Environment.BG_COLOR  # Use color mode for black
+			dark_env.background_color = Color.BLACK  # Pure black color
+			dark_env.tonemap_exposure = 0.1  # Darken the entire scene
 			dark_env.adjustment_enabled = true
-			dark_env.adjustment_brightness = 0.3
-			dark_env.adjustment_contrast = 1.5
+			dark_env.adjustment_brightness = 0.3  # Very dim
+			dark_env.adjustment_contrast = 1.5  # Increase contrast for flicker effect
 			env.environment = dark_env
-			print("  ✓ ", env.name, " set to PITCH BLACK")
+			env_disabled += 1
+			print("  ✓ ", env.name, " set to PITCH BLACK environment")
 	
-	# Turn off ALL lights except tubelight
-	for light in get_tree().get_nodes_in_group("lights"):
+	print("Environment disabled: %d nodes" % env_disabled)
+
+	# lights OFF - turn off ALL lights in the scene (not just group) - EXACTLY LIKE GAMEMANAGER
+	print("DEBUG: Turning off lights...")
+	var lights_found = 0
+	
+	# First, turn off lights in "lights" group (but not the flickering tubelight)
+	var all_lights = get_tree().get_nodes_in_group("lights")
+	print("  Total lights in 'lights' group: ", all_lights.size())
+	for light in all_lights:
+		print("  Found grouped light: ", light.name, " type: ", light.get_class())
 		if light and "light_energy" in light:
-			if light.name != "tubelight":
+			# Skip flickering lights - they're already saved separately
+			if light.name in ["tablelamplight", "tubelight"]:
+				print("    ✓ ", light.name, " reserved for flickering")
+			else:
 				light.light_energy = 0
-				lights_disabled += 1
-				print("  ✓ Turned OFF: ", light.name)
+				lights_found += 1
+				print("    ✓ ", light.name, " turned OFF")
 	
-	# Also search entire scene for stray lights
+	# Second, find ALL DirectionalLight3D, OmniLight3D, SpotLight3D in the entire scene (but not flickering lights)
 	for node in get_tree().root.find_children("*", "Light3D", true, false):
 		if node and "light_energy" in node:
-			if node.light_energy > 0 and node.name != "tubelight":
-				# For DirectionalLight3D, reduce energy instead of turning off
-				# This keeps some ambient light for flickering visibility
-				if node is DirectionalLight3D:
-					node.light_energy = 0.2  # Keep some light for contrast
-					lights_disabled += 1
-					print("  ✓ ", node.name, " reduced to 0.2 energy (for flicker contrast)")
+			if node.light_energy > 0:
+				# Skip flickering lights - they're already saved separately
+				if node.name in ["tablelamplight", "tubelight"]:
+					print("  Found stray ", node.name, " reserved for flickering")
 				else:
-					node.light_energy = 0
-					lights_disabled += 1
-					print("  ✓ Turned OFF stray light: ", node.name)
+					# For DirectionalLight3D, reduce energy instead of turning off
+					# This keeps some ambient light for flickering visibility
+					if node is DirectionalLight3D:
+						node.light_energy = 0.2  # Keep some light for contrast
+						lights_found += 1
+						print("    ✓ ", node.name, " reduced to 0.2 energy (for flicker contrast)")
+					else:
+						node.light_energy = 0
+						lights_found += 1
+						print("    ✓ ", node.name, " turned OFF")
 	
-	print("Total lights disabled: %d" % lights_disabled)
+	print("Turned off %d total lights" % lights_found)
 	
-	# Start flickering tubelights - EXACTLY LIKE GAMEMANAGER
+	# Start flickering the saved tubelight lights - EXACTLY LIKE GAMEMANAGER
 	if tubelight_saved.size() > 0:
 		start_flicker(tubelight_saved)
 		print("Flickering started for %d lights" % tubelight_saved.size())
 	else:
 		print("WARNING: No tubelights found for flickering")
-	
+
+	await get_tree().create_timer(1.0).timeout
+
 	# Play chase sound
 	play_chase_sound()
 	

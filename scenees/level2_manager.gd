@@ -38,6 +38,42 @@ func trigger_level2_horror():
 	horror_started = true
 	print("!!! LEVEL 2 HORROR TRIGGERED ===")
 	
+	# Turn off world environment for darkness - AGGRESSIVE DARKENING
+	print("DEBUG: Disabling environment and lights...")
+	var lights_disabled = 0
+	
+	# First, disable environment
+	for env in get_tree().get_nodes_in_group("env"):
+		if env and env is WorldEnvironment:
+			var dark_env = Environment.new()
+			dark_env.ambient_light_energy = 0.0
+			dark_env.background_mode = Environment.BG_COLOR
+			dark_env.background_color = Color.BLACK
+			dark_env.tonemap_exposure = 0.1
+			dark_env.adjustment_enabled = true
+			dark_env.adjustment_brightness = 0.3
+			dark_env.adjustment_contrast = 1.5
+			env.environment = dark_env
+			print("  ✓ ", env.name, " set to PITCH BLACK")
+	
+	# Turn off ALL lights except tubelight
+	for light in get_tree().get_nodes_in_group("lights"):
+		if light and "light_energy" in light:
+			if light.name != "tubelight":
+				light.light_energy = 0
+				lights_disabled += 1
+				print("  ✓ Turned OFF: ", light.name)
+	
+	# Also search entire scene for stray lights
+	for node in get_tree().root.find_children("*", "Light3D", true, false):
+		if node and "light_energy" in node:
+			if node.light_energy > 0 and node.name != "tubelight":
+				node.light_energy = 0
+				lights_disabled += 1
+				print("  ✓ Turned OFF stray light: ", node.name)
+	
+	print("Total lights disabled: %d" % lights_disabled)
+	
 	# Start flickering tubelights
 	if tubelight_saved.size() > 0:
 		start_flicker(tubelight_saved)

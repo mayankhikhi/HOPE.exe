@@ -241,10 +241,16 @@ func start_horror():
 				if node.name in ["tablelamplight", "tubelight"]:
 					print("  Found stray ", node.name, " reserved for flickering")
 				else:
-					print("  Found stray light: ", node.name, " at energy ", node.light_energy)
-					node.light_energy = 0
-					lights_found += 1
-					print("    ✓ ", node.name, " turned OFF")
+					# For DirectionalLight3D, reduce energy instead of turning off
+					# This keeps some ambient light for flickering visibility
+					if node is DirectionalLight3D:
+						node.light_energy = 0.2  # Keep some light for contrast
+						lights_found += 1
+						print("    ✓ ", node.name, " reduced to 0.2 energy (for flicker contrast)")
+					else:
+						node.light_energy = 0
+						lights_found += 1
+						print("    ✓ ", node.name, " turned OFF")
 	
 	print("Turned off %d total lights" % lights_found)
 	

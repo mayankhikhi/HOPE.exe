@@ -70,9 +70,16 @@ func trigger_level2_horror():
 	for node in get_tree().root.find_children("*", "Light3D", true, false):
 		if node and "light_energy" in node:
 			if node.light_energy > 0 and node.name != "tubelight":
-				node.light_energy = 0
-				lights_disabled += 1
-				print("  ✓ Turned OFF stray light: ", node.name)
+				# For DirectionalLight3D, reduce energy instead of turning off
+				# This keeps some ambient light for flickering visibility
+				if node is DirectionalLight3D:
+					node.light_energy = 0.2  # Keep some light for contrast
+					lights_disabled += 1
+					print("  ✓ ", node.name, " reduced to 0.2 energy (for flicker contrast)")
+				else:
+					node.light_energy = 0
+					lights_disabled += 1
+					print("  ✓ Turned OFF stray light: ", node.name)
 	
 	print("Total lights disabled: %d" % lights_disabled)
 	

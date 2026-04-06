@@ -100,7 +100,8 @@ func setup_ui():
 	# Create phone screen (center) - initially hidden - PHONE-LIKE APPEARANCE
 	phone_screen = Control.new()
 	phone_screen.set_anchors_preset(Control.PRESET_CENTER)
-	phone_screen.size = Vector2(420, 740)
+	phone_screen.offset_top = -150  # Move phone UP on screen
+	phone_screen.size = Vector2(380, 600)  # Make phone smaller
 	phone_screen.visible = false
 	add_child(phone_screen)
 	
@@ -129,29 +130,30 @@ func setup_ui():
 	chat_panel.add_theme_stylebox_override("panel", screen_style)
 	
 	var chat_vbox = VBoxContainer.new()
-	chat_vbox.add_theme_constant_override("separation", 8)
+	chat_vbox.add_theme_constant_override("separation", 5)
 	chat_panel.add_child(chat_vbox)
 	
 	# Status bar at top
 	var status_label = Label.new()
 	status_label.text = "📱 Messages"
-	status_label.add_theme_font_size_override("font_size", 16)
+	status_label.add_theme_font_size_override("font_size", 14)
 	status_label.add_theme_color_override("font_color", Color.WHITE)
-	status_label.custom_minimum_size = Vector2(0, 40)
+	status_label.custom_minimum_size = Vector2(0, 30)
 	chat_vbox.add_child(status_label)
 	
 	# Contact buttons
 	var buttons_hbox = HBoxContainer.new()
-	buttons_hbox.add_theme_constant_override("separation", 5)
+	buttons_hbox.add_theme_constant_override("separation", 3)
 	buttons_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	buttons_hbox.custom_minimum_size = Vector2(0, 50)
+	buttons_hbox.custom_minimum_size = Vector2(0, 38)
 	chat_vbox.add_child(buttons_hbox)
 	
 	for contact in ["girlfriend", "dad", "mom"]:
 		var btn = Button.new()
 		btn.text = contact.capitalize()
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.custom_minimum_size = Vector2(0, 40)
+		btn.custom_minimum_size = Vector2(0, 35)
+		btn.add_theme_font_size_override("font_size", 12)
 		btn.pressed.connect(_on_contact_selected.bindv([contact]))
 		
 		var btn_style = StyleBoxFlat.new()
@@ -163,28 +165,30 @@ func setup_ui():
 		buttons_hbox.add_child(btn)
 		contact_buttons[contact] = btn
 	
-	# Chat display
+	# Chat display (reduced size)
 	chat_display = TextEdit.new()
 	chat_display.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	chat_display.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	chat_display.custom_minimum_size = Vector2(0, 250)
+	chat_display.custom_minimum_size = Vector2(0, 120)
 	chat_display.editable = false
+	chat_display.add_theme_font_size_override("font_size", 11)
 	var chat_display_style = StyleBoxFlat.new()
 	chat_display_style.bg_color = Color(0.1, 0.1, 0.1, 1.0)
 	chat_display.add_theme_stylebox_override("normal", chat_display_style)
 	chat_vbox.add_child(chat_display)
 	
-	# Chat input area
+	# Chat input area (compact)
 	var input_container = VBoxContainer.new()
-	input_container.add_theme_constant_override("separation", 3)
-	input_container.custom_minimum_size = Vector2(0, 90)
+	input_container.add_theme_constant_override("separation", 2)
+	input_container.custom_minimum_size = Vector2(0, 70)
 	input_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chat_vbox.add_child(input_container)
 	
 	chat_input = LineEdit.new()
 	chat_input.placeholder_text = "Type message..."
 	chat_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	chat_input.custom_minimum_size = Vector2(0, 40)
+	chat_input.custom_minimum_size = Vector2(0, 32)
+	chat_input.add_theme_font_size_override("font_size", 12)
 	chat_input.text_changed.connect(_on_typing)
 	chat_input.text_submitted.connect(_on_send_message)
 	var input_style = StyleBoxFlat.new()
@@ -196,8 +200,8 @@ func setup_ui():
 	send_btn = Button.new()
 	send_btn.text = "SEND ✓"
 	send_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	send_btn.custom_minimum_size = Vector2(0, 35)
-	send_btn.add_theme_font_size_override("font_size", 14)
+	send_btn.custom_minimum_size = Vector2(0, 32)
+	send_btn.add_theme_font_size_override("font_size", 12)
 	send_btn.pressed.connect(_on_send_message)
 	input_container.add_child(send_btn)
 	
@@ -207,11 +211,12 @@ func setup_ui():
 	var close_btn = Button.new()
 	close_btn.text = "Close (P)"
 	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	close_btn.custom_minimum_size = Vector2(0, 35)
+	close_btn.custom_minimum_size = Vector2(0, 30)
+	close_btn.add_theme_font_size_override("font_size", 11)
 	close_btn.pressed.connect(close_phone)
 	chat_vbox.add_child(close_btn)
 	
-	print("✓ Phone UI created with phone-like styling")
+	print("✓ Phone UI created with phone-like styling - COMPACT")
 
 func show_initial_notification():
 	print("DEBUG: Showing girlfriend notification...")

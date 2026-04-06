@@ -94,6 +94,19 @@ func turn_off_initial_lights():
 	# Use the saved references to turn them off
 	for light in flicker_lights_saved:
 		if is_instance_valid(light):
+			# Stop any AnimationPlayer that might be flickering the light
+			var parent = light.get_parent()
+			if parent and parent.has_node("AnimationPlayer"):
+				var anim_player = parent.get_node("AnimationPlayer")
+				anim_player.stop()
+				print("  ✓ ", light.name, " animation stopped")
+			
+			# Also check if light itself has a child AnimationPlayer
+			if light.has_node("AnimationPlayer"):
+				var anim_player = light.get_node("AnimationPlayer")
+				anim_player.stop()
+				print("  ✓ ", light.name, " child animation stopped")
+			
 			light.light_energy = 0
 			lights_off += 1
 			print("  ✓ ", light.name, " turned OFF")
@@ -181,7 +194,7 @@ func start_horror():
 
 	await get_tree().create_timer(1.0).timeout
 
-	# Turn off world environment for darkness
+	# Turn off world environment for darkness - AGGRESSIVE DARKENING
 	print("DEBUG: Disabling environment...")
 	var env_disabled = 0
 	for env in get_tree().get_nodes_in_group("env"):
@@ -189,12 +202,16 @@ func start_horror():
 		if env and env is WorldEnvironment:
 			# Create a completely dark environment
 			var dark_env = Environment.new()
-			dark_env.ambient_light_energy = 0  # No ambient light
-			dark_env.background_mode = Environment.BG_COLOR
-			dark_env.background_color = Color.BLACK
+			dark_env.ambient_light_energy = 0.0  # Absolute zero ambient light
+			dark_env.ambient_light_source = Environment.AMBIENT_LIGHT_DISABLED
+			dark_env.background_mode = Environment.BG_BLACK  # Pure black background
+			dark_env.tonemap_exposure = 0.1  # Darken the entire scene
+			dark_env.adjustment_enabled = true
+			dark_env.adjustment_brightness = 0.3  # Very dim
+			dark_env.adjustment_contrast = 1.5  # Increase contrast for flicker effect
 			env.environment = dark_env
 			env_disabled += 1
-			print("  ✓ ", env.name, " set to dark environment")
+			print("  ✓ ", env.name, " set to PITCH BLACK environment")
 	
 	print("Environment disabled: %d nodes" % env_disabled)
 

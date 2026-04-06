@@ -10,22 +10,24 @@ func _ready():
 	find_and_save_tubelights()
 
 func find_and_save_tubelights():
-	# Find tubelight references for flickering
+	# Find tubelight references for flickering - EXACTLY LIKE GAMEMANAGER
 	print("DEBUG: Finding tubelights for Level 2...")
 	tubelight_saved.clear()
 	
-	# Search in lights group
-	for light in get_tree().get_nodes_in_group("lights"):
+	# Search for tubelight in all lights
+	var all_lights = get_tree().get_nodes_in_group("lights")
+	for light in all_lights:
 		if light and "light_energy" in light and light.name == "tubelight":
 			tubelight_saved.append(light)
-			print("  ✓ Saved tubelight from lights group")
+			print("  ✓ Saved ", light.name, " for flickering")
 	
-	# Find stray tubelights
+	# Also search in entire scene for any stray tubelights
 	for node in get_tree().root.find_children("*", "Light3D", true, false):
 		if node and "light_energy" in node and node.name == "tubelight":
+			# Check if not already in list
 			if node not in tubelight_saved:
 				tubelight_saved.append(node)
-				print("  ✓ Saved stray tubelight")
+				print("  ✓ Saved stray ", node.name, " for flickering")
 	
 	print("Total tubelights saved: %d" % tubelight_saved.size())
 
@@ -74,9 +76,10 @@ func trigger_level2_horror():
 	
 	print("Total lights disabled: %d" % lights_disabled)
 	
-	# Start flickering tubelights
+	# Start flickering tubelights - EXACTLY LIKE GAMEMANAGER
 	if tubelight_saved.size() > 0:
 		start_flicker(tubelight_saved)
+		print("Flickering started for %d lights" % tubelight_saved.size())
 	else:
 		print("WARNING: No tubelights found for flickering")
 	
@@ -86,38 +89,39 @@ func trigger_level2_horror():
 	# Game continues - player must navigate to void
 
 func start_flicker(lights: Array):
-	print("Starting tubelight flicker for %d lights" % lights.size())
+	# Flicker multiple lights continuously until scene changes - EXACTLY LIKE GAMEMANAGER
+	var original_energy = 1.5  # Bright flicker
+	var dim_energy = 0.3  # Dim flicker
 	
-	# Flicker pattern: bright -> dim -> bright -> off
-	var original_energy = 1.5
-	var dim_energy = 0.3
+	if lights.is_empty():
+		print("ERROR: No lights provided for flickering")
+		return
+	
+	print("Starting flicker for %d lights" % lights.size())
 	
 	while true:
-		# Set all lights to bright
+		# Flicker all lights simultaneously
 		for light in lights:
 			if is_instance_valid(light):
 				light.light_energy = original_energy
 		await get_tree().create_timer(0.1).timeout
 		
-		# Set all lights to dim
 		for light in lights:
 			if is_instance_valid(light):
 				light.light_energy = dim_energy
 		await get_tree().create_timer(0.15).timeout
 		
-		# Set all lights to bright
 		for light in lights:
 			if is_instance_valid(light):
 				light.light_energy = original_energy
 		await get_tree().create_timer(0.08).timeout
 		
-		# Set all lights to off
 		for light in lights:
 			if is_instance_valid(light):
-				light.light_energy = 0
+				light.light_energy = 0  # Full off
 		await get_tree().create_timer(0.12).timeout
 		
-		# Check if any lights still valid
+		# Check if any lights are still valid
 		var any_valid = false
 		for light in lights:
 			if is_instance_valid(light):
@@ -125,8 +129,9 @@ func start_flicker(lights: Array):
 				break
 		
 		if not any_valid:
-			print("Tubelight flicker stopped (lights invalid)")
 			break
+	
+	print("Light flicker stopped")
 
 func play_chase_sound():
 	# Try to find and play chase sound from player

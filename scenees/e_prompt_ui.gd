@@ -14,8 +14,8 @@ func setup_prompt_ui():
 	
 	# Create label at bottom center
 	prompt_label = Label.new()
-	prompt_label.text = "[E] Interact"
-	prompt_label.set_anchors_preset(Control.PRESET_BOTTOM_CENTER)
+	prompt_label.text = "[E]"
+	prompt_label.set_anchors_preset(Control.PRESET_CENTER)
 	prompt_label.offset_top = -60
 	prompt_label.add_theme_font_size_override("font_size", 24)
 	prompt_label.add_theme_color_override("font_color", Color.YELLOW)

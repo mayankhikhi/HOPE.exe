@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://c00y25rouhopt"]
+
+[ext_resource type="Script" uid="uid://xmthoooq68i7" path="res://scenees/main_menu.gd" id="1_lx6pn"]
+[ext_resource type="Texture2D" uid="uid://x6vg22fx0adu" path="res://materials/mainmenubg.png" id="2_ncxeq"]
+[ext_resource type="FontFile" uid="uid://jgmgevf1rukb" path="res://fonts/Mom«t___.ttf" id="3_4gqwe"]
+[ext_resource type="AudioStream" uid="uid://bl1xofr3fw8p7" path="res://audio/menubgm.mp3" id="4_ncxeq"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_uotvd"]
+texture = ExtResource("2_ncxeq")
+
+[node name="MainMenu" type="Control" unique_id=470913975]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lx6pn")
+
+[node name="Panel" type="Panel" parent="." unique_id=617564411]
+layout_mode = 0
+offset_right = 1218.0
+offset_bottom = 680.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_uotvd")
+
+[node name="Button" type="Button" parent="Panel" unique_id=2043433161]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 283.0
+offset_right = 231.0
+offset_bottom = 349.0
+theme_override_fonts/font = ExtResource("3_4gqwe")
+theme_override_font_sizes/font_size = 40
+text = "Play"
+
+[node name="Button2" type="Button" parent="Panel" unique_id=1451672333]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 358.0
+offset_right = 231.0
+offset_bottom = 424.0
+theme_override_fonts/font = ExtResource("3_4gqwe")
+theme_override_font_sizes/font_size = 40
+text = "Options"
+
+[node name="Button3" type="Button" parent="Panel" unique_id=1713075650]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 435.0
+offset_right = 232.0
+offset_bottom = 501.0
+theme_override_fonts/font = ExtResource("3_4gqwe")
+theme_override_font_sizes/font_size = 40
+text = "Quit"
+
+[node name="menubgm" type="AudioStreamPlayer" parent="." unique_id=1593731184]
+stream = ExtResource("4_ncxeq")
+autoplay = true

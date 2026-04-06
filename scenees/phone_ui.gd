@@ -5,7 +5,7 @@ var notification_panel: PanelContainer
 var notification_label: Label
 var instruction_label: Label
 var chat_panel: Control
-var phone_screen: PanelContainer
+var phone_screen: Control  # Changed from PanelContainer to Control
 var chat_display: TextEdit
 var chat_input: LineEdit
 var send_btn: Button
@@ -100,21 +100,28 @@ func setup_ui():
 	# Create phone screen (center) - initially hidden - PHONE-LIKE APPEARANCE
 	phone_screen = Control.new()
 	phone_screen.set_anchors_preset(Control.PRESET_CENTER)
-	phone_screen.size = Vector2(400, 700)
+	phone_screen.size = Vector2(420, 740)
 	phone_screen.visible = false
 	add_child(phone_screen)
 	
 	# Phone background (bezel-like)
 	var phone_bg = ColorRect.new()
 	phone_bg.color = Color.BLACK
-	phone_bg.size = phone_screen.size
+	phone_bg.anchor_right = 1.0
+	phone_bg.anchor_bottom = 1.0
 	phone_screen.add_child(phone_bg)
-	move_child(phone_bg, 0)  # Send to back
+	move_child(phone_bg, 0)
 	
 	# Screen inside phone
 	chat_panel = PanelContainer.new()
-	chat_panel.size = Vector2(380, 660)
-	chat_panel.position = Vector2(10, 20)
+	chat_panel.anchor_left = 0
+	chat_panel.anchor_top = 0
+	chat_panel.anchor_right = 1
+	chat_panel.anchor_bottom = 1
+	chat_panel.offset_left = 10
+	chat_panel.offset_top = 20
+	chat_panel.offset_right = -10
+	chat_panel.offset_bottom = -20
 	phone_screen.add_child(chat_panel)
 	
 	var screen_style = StyleBoxFlat.new()
@@ -130,19 +137,21 @@ func setup_ui():
 	status_label.text = "📱 Messages"
 	status_label.add_theme_font_size_override("font_size", 16)
 	status_label.add_theme_color_override("font_color", Color.WHITE)
-	status_label.custom_minimum_size = Vector2(360, 40)
+	status_label.custom_minimum_size = Vector2(0, 40)
 	chat_vbox.add_child(status_label)
 	
 	# Contact buttons
 	var buttons_hbox = HBoxContainer.new()
 	buttons_hbox.add_theme_constant_override("separation", 5)
-	buttons_hbox.custom_minimum_size = Vector2(360, 50)
+	buttons_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	buttons_hbox.custom_minimum_size = Vector2(0, 50)
 	chat_vbox.add_child(buttons_hbox)
 	
 	for contact in ["girlfriend", "dad", "mom"]:
 		var btn = Button.new()
 		btn.text = contact.capitalize()
-		btn.custom_minimum_size = Vector2(110, 40)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.custom_minimum_size = Vector2(0, 40)
 		btn.pressed.connect(_on_contact_selected.bindv([contact]))
 		
 		var btn_style = StyleBoxFlat.new()
@@ -156,7 +165,9 @@ func setup_ui():
 	
 	# Chat display
 	chat_display = TextEdit.new()
-	chat_display.custom_minimum_size = Vector2(360, 300)
+	chat_display.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	chat_display.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chat_display.custom_minimum_size = Vector2(0, 250)
 	chat_display.editable = false
 	var chat_display_style = StyleBoxFlat.new()
 	chat_display_style.bg_color = Color(0.1, 0.1, 0.1, 1.0)
@@ -164,30 +175,39 @@ func setup_ui():
 	chat_vbox.add_child(chat_display)
 	
 	# Chat input area
-	var input_hbox = HBoxContainer.new()
-	input_hbox.add_theme_constant_override("separation", 5)
-	chat_vbox.add_child(input_hbox)
+	var input_container = VBoxContainer.new()
+	input_container.add_theme_constant_override("separation", 3)
+	input_container.custom_minimum_size = Vector2(0, 90)
+	input_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chat_vbox.add_child(input_container)
 	
 	chat_input = LineEdit.new()
 	chat_input.placeholder_text = "Type message..."
-	chat_input.custom_minimum_size = Vector2(280, 40)
+	chat_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chat_input.custom_minimum_size = Vector2(0, 40)
 	chat_input.text_changed.connect(_on_typing)
+	chat_input.text_submitted.connect(_on_send_message)
 	var input_style = StyleBoxFlat.new()
 	input_style.bg_color = Color(0.15, 0.15, 0.15, 1.0)
 	chat_input.add_theme_stylebox_override("normal", input_style)
-	input_hbox.add_child(chat_input)
+	input_container.add_child(chat_input)
 	
 	# Send button
 	send_btn = Button.new()
-	send_btn.text = "Send"
-	send_btn.custom_minimum_size = Vector2(70, 40)
+	send_btn.text = "SEND ✓"
+	send_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	send_btn.custom_minimum_size = Vector2(0, 35)
+	send_btn.add_theme_font_size_override("font_size", 14)
 	send_btn.pressed.connect(_on_send_message)
-	input_hbox.add_child(send_btn)
+	input_container.add_child(send_btn)
+	
+	print("✓ Send button created and visible")
 	
 	# Close button (bottom)
 	var close_btn = Button.new()
 	close_btn.text = "Close (P)"
-	close_btn.custom_minimum_size = Vector2(360, 35)
+	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	close_btn.custom_minimum_size = Vector2(0, 35)
 	close_btn.pressed.connect(close_phone)
 	chat_vbox.add_child(close_btn)
 	
@@ -220,9 +240,15 @@ func open_phone():
 	# Unlock mouse cursor
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
-	# Default to girlfriend
+	# Default to girlfriend if no contact selected
 	if current_contact == "":
+		print("✓ Selecting default contact: girlfriend")
 		_on_contact_selected("girlfriend")
+		await get_tree().process_frame  # Ensure UI is updated
+	
+	# Focus on chat input
+	chat_input.grab_focus()
+	print("✓ Chat input focused - ready to type")
 
 func close_phone():
 	print("DEBUG: Phone closed")
@@ -267,15 +293,16 @@ func _on_contact_selected(contact: String):
 	print("DEBUG: Selected contact: %s" % contact)
 	current_contact = contact
 	
-	# Update button states
+	# Update button states - highlight active
 	for c in contact_buttons:
 		var btn_style = StyleBoxFlat.new()
 		if c == contact:
 			btn_style.bg_color = Color(0.3, 0.6, 1.0, 1.0)  # Highlight active
+			btn_style.border_color = Color(0.5, 0.8, 1.0, 1.0)
 		else:
 			btn_style.bg_color = Color(0.2, 0.2, 0.2, 1.0)
-		btn_style.border_color = Color(0.4, 0.4, 0.4, 1.0)
-		btn_style.set_border_width_all(1)
+			btn_style.border_color = Color(0.4, 0.4, 0.4, 1.0)
+		btn_style.set_border_width_all(2)
 		contact_buttons[c].add_theme_stylebox_override("normal", btn_style)
 	
 	# Display chat history
@@ -285,9 +312,15 @@ func _on_contact_selected(contact: String):
 	
 	# Auto-fill with queued message if not sent
 	if not messages_sent[contact]:
-		chat_input.text = message_queue[contact]
+		var msg_to_send = message_queue[contact]
+		chat_input.text = msg_to_send
+		print("✓ Pre-filled message: %s" % msg_to_send)
 	else:
 		chat_input.text = ""
+		print("✓ Already sent message to %s" % contact)
+	
+	# Focus on input field so user can edit if needed
+	chat_input.grab_focus()
 
 func _on_typing():
 	# Play typing sound - uncomment when you add audio
@@ -295,18 +328,26 @@ func _on_typing():
 	pass
 
 func _on_send_message():
-	if current_contact == "" or chat_input.text == "":
+	print("DEBUG: _on_send_message called - contact:%s, text:%s" % [current_contact, chat_input.text])
+	
+	if current_contact == "":
+		print("ERROR: No contact selected!")
 		return
 	
-	# Check if this is the expected message for this contact
-	var expected_msg = message_queue[current_contact]
+	if chat_input.text == "":
+		print("ERROR: No message to send!")
+		return
+	
 	var sent_msg = chat_input.text
 	
-	print("✓ Message sent to %s: %s" % [current_contact, sent_msg])
+	print("✓✓✓ MESSAGE SENT TO %s: %s" % [current_contact.to_upper(), sent_msg])
 	
 	# Record in history
 	chat_history[current_contact].append("[You]: " + sent_msg)
 	chat_display.text += "[You]: " + sent_msg + "\n"
+	
+	# Auto-scroll to bottom
+	chat_display.set_caret_line(chat_display.get_line_count())
 	
 	# Mark as sent
 	messages_sent[current_contact] = true
@@ -314,6 +355,7 @@ func _on_send_message():
 	
 	# Play send sound
 	play_sound(sound_message_sent)
+	print("✓ Message marked as sent for", current_contact)
 	
 	# Check if all messages sent
 	if all_messages_sent():
